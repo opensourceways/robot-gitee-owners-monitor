@@ -1,9 +1,13 @@
 package main
 
-import "github.com/opensourceways/community-robot-lib/config"
+import (
+	"fmt"
+
+	"github.com/opensourceways/community-robot-lib/config"
+)
 
 type configuration struct {
-	ConfigItems []botConfig `json:"config_items,omitempty"`
+	ConfigItems []botConfig `json:"config_items"required:"true"`
 }
 
 func (c *configuration) configFor(org, repo string) *botConfig {
@@ -20,7 +24,7 @@ func (c *configuration) configFor(org, repo string) *botConfig {
 	if i := config.Find(org, repo, v); i >= 0 {
 		return &items[i]
 	}
-	
+
 	return nil
 }
 
@@ -35,7 +39,7 @@ func (c *configuration) Validate() error {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -52,11 +56,20 @@ func (c *configuration) SetDefault() {
 
 type botConfig struct {
 	config.RepoFilter
+
+	FileNames []string `json:"file_names,omitempty"`
 }
 
 func (c *botConfig) setDefault() {
+	if len(c.FileNames) == 0 {
+		c.FileNames = append(c.FileNames, "OWNERS")
+	}
 }
 
 func (c *botConfig) validate() error {
+	if len(c.FileNames) == 0 {
+		return fmt.Errorf("the file_names configuration item can not be empty")
+	}
+
 	return c.RepoFilter.Validate()
 }
