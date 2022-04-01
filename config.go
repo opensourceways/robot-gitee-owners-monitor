@@ -61,9 +61,6 @@ type botConfig struct {
 }
 
 func (c *botConfig) setDefault() {
-	if len(c.FileNames) == 0 {
-		c.FileNames = append(c.FileNames, "OWNERS")
-	}
 }
 
 func (c *botConfig) validate() error {
