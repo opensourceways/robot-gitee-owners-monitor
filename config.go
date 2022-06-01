@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/opensourceways/community-robot-lib/config"
 )
 
 type configuration struct {
-	ConfigItems []botConfig `json:"config_items"required:"true"`
+	ConfigItems []botConfig `json:"config_items,omitempty"`
 }
 
 func (c *configuration) configFor(org, repo string) *botConfig {
@@ -57,7 +58,7 @@ func (c *configuration) SetDefault() {
 type botConfig struct {
 	config.RepoFilter
 
-	FileNames []string `json:"file_names,omitempty"`
+	FileNames []string `json:"file_names" required:"true"`
 }
 
 func (c *botConfig) setDefault() {
@@ -69,4 +70,8 @@ func (c *botConfig) validate() error {
 	}
 
 	return c.RepoFilter.Validate()
+}
+
+func (c *botConfig) GetFileNames() []string {
+	return sets.NewString(c.FileNames...).UnsortedList()
 }

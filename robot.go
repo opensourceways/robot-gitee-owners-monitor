@@ -42,7 +42,6 @@ func (bot *robot) getConfig(cfg config.Config) (*configuration, error) {
 }
 
 func (bot *robot) RegisterEventHandler(f framework.HandlerRegitster) {
-	f.RegisterPullRequestHandler(bot.handlePREvent)
 	f.RegisterPushEventHandler(bot.handlePushEvent)
 }
 
@@ -68,36 +67,7 @@ func (bot *robot) handlePushEvent(e *sdk.PushEvent, c config.Config, log *logrus
 	index := strings.LastIndex(ref, "/") + 1
 	ref = ref[index:]
 
-	return bot.handle(org, repo, ref, sha, sets.NewString(bcfg.FileNames...).UnsortedList())
-}
-
-func (bot *robot) handlePREvent(e *sdk.PullRequestEvent, c config.Config, log *logrus.Entry) error {
-	if e.GetAction() != "merge" {
-		return nil
-	}
-
-	cfg, err := bot.getConfig(c)
-	if err != nil {
-		return err
-	}
-
-	org, repo := e.GetOrgRepo()
-
-	bcfg := cfg.configFor(org, repo)
-	if bcfg == nil {
-		return fmt.Errorf("no config for this repo: %s/%s", org, repo)
-	}
-
-	changes, b := bot.ownersFilesChanged(org, repo, e.GetPullRequest().GetNumber(), bcfg, log)
-	if !b {
-		return nil
-	}
-
-	branch := e.GetPullRequest().GetBase()
-	ref := branch.GetRef()
-	sha := branch.GetSha()
-
-	return bot.handle(org, repo, ref, sha, changes)
+	return bot.handle(org, repo, ref, sha, bcfg.GetFileNames())
 }
 
 func (bot *robot) handle(org, repo, branch, sha string, fileNames []string) error {
